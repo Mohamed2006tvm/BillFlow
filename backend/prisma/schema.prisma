@@ -8,20 +8,22 @@ datasource db {
 }
 
 model User {
-  id                String     @id @default(uuid())
+  id                String          @id @default(uuid())
   name              String
-  email             String     @unique
+  email             String          @unique
   password          String
-  phone             String     @unique
+  phone             String          @unique
   shopName          String
-  role              String     @default("user") // "admin" | "user"
-  isActive          Boolean    @default(true)
+  role              String          @default("user") // "admin" | "user"
+  isActive          Boolean         @default(true)
   subscriptionStart DateTime?
   subscriptionEnd   DateTime?
-  createdAt         DateTime   @default(now())
+  monthlyAmount     Float?          // Monthly fee charged by admin
+  createdAt         DateTime        @default(now())
   customers         Customer[]
   invoices          Invoice[]
   supportTickets    SupportTicket[]
+  products          Product[]
 }
 
 model Customer {
@@ -63,4 +65,14 @@ model SupportTicket {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  sku       String?
+  price     Float
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }

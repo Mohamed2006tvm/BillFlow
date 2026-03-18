@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
@@ -14,7 +14,9 @@ import {
   History,
   AlertCircle,
   Search,
-  Check
+  Check,
+  Package,
+  Sparkles
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 
@@ -28,8 +30,15 @@ const CreateInvoicePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Product catalog state
+  const [products, setProducts] = useState([]);
+  const [productSearch, setProductSearch] = useState('');
+  const [isProductPanelOpen, setIsProductPanelOpen] = useState(false);
+  const productPanelRef = useRef(null);
+
   useEffect(() => {
     fetchCustomers();
+    fetchProducts();
   }, []);
 
   const fetchCustomers = async () => {
@@ -38,6 +47,15 @@ const CreateInvoicePage = () => {
       setCustomers(res.data);
     } catch (err) {
       console.error('Failed to fetch customers', err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get('/products');
+      setProducts(res.data);
+    } catch (err) {
+      console.error('Failed to fetch products', err);
     }
   };
 
@@ -54,6 +72,27 @@ const CreateInvoicePage = () => {
     const newItems = [...items];
     newItems[index][field] = value;
     setItems(newItems);
+  };
+
+  const addProductToItems = (product) => {
+    // Check if item with this name already exists and increment qty
+    const existingIndex = items.findIndex(i => i.name === product.name);
+    if (existingIndex >= 0) {
+      const newItems = [...items];
+      newItems[existingIndex].quantity = String(parseInt(newItems[existingIndex].quantity || '1') + 1);
+      setItems(newItems);
+    } else {
+      // If the last item row is empty, fill it in
+      const lastItem = items[items.length - 1];
+      if (!lastItem.name && !lastItem.price) {
+        const newItems = [...items];
+        newItems[items.length - 1] = { name: product.name, price: String(product.price), quantity: '1' };
+        setItems(newItems);
+      } else {
+        setItems([...items, { name: product.name, price: String(product.price), quantity: '1' }]);
+      }
+    }
+    setProductSearch('');
   };
 
   const calculateTotal = () => {
@@ -81,6 +120,11 @@ const CreateInvoicePage = () => {
     }
   };
 
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    (p.sku && p.sku.toLowerCase().includes(productSearch.toLowerCase()))
+  );
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <div className="flex items-center justify-between">
@@ -102,6 +146,7 @@ const CreateInvoicePage = () => {
           </div>
         )}
 
+        {/* Customer select */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -173,9 +218,60 @@ const CreateInvoicePage = () => {
           </CardContent>
         </Card>
 
+        {/* Product Catalog Quick-Add */}
+        {products.length > 0 && (
+          <Card className="border-brand-100 bg-brand-50/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2 text-brand-700">
+                  <Sparkles className="w-4 h-4" />
+                  Quick Add from Catalog
+                </CardTitle>
+                <button 
+                  type="button"
+                  onClick={() => setIsProductPanelOpen(!isProductPanelOpen)}
+                  className="text-xs font-semibold text-brand-600 hover:underline"
+                >
+                  {isProductPanelOpen ? 'Hide' : 'Browse ↓'}
+                </button>
+              </div>
+            </CardHeader>
+            {isProductPanelOpen && (
+              <CardContent className="pt-0">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input 
+                    className="pl-9 bg-white"
+                    placeholder="Search your products..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto py-1">
+                  {filteredProducts.length === 0 ? (
+                    <p className="text-sm text-slate-400 italic">No products found.</p>
+                  ) : filteredProducts.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => addProductToItems(p)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-brand-100 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm text-sm font-medium text-slate-700 transition-all group"
+                    >
+                      <Package className="w-3.5 h-3.5 text-brand-500 group-hover:scale-110 transition-transform" />
+                      <span>{p.name}</span>
+                      <span className="text-brand-600 font-bold">{formatCurrency(p.price)}</span>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Items */}
         <Card>
            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 mb-6">
-              <CardTitle className="text-lg">Items & Services</CardTitle>
+              <CardTitle className="text-lg">Items &amp; Services</CardTitle>
               <Button type="button" variant="secondary" size="sm" onClick={addItem} className="gap-1.5 h-9 rounded-lg">
                  <Plus className="w-4 h-4" />
                  Add Line

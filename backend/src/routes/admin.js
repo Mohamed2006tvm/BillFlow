@@ -68,6 +68,7 @@ router.get('/users', async (_req, res) => {
         isActive: true,
         subscriptionStart: true,
         subscriptionEnd: true,
+        monthlyAmount: true,
         createdAt: true,
         _count: { select: { invoices: true } },
       },
@@ -120,6 +121,24 @@ router.put('/toggle/:userId', async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error('Toggle error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/monthly-amount/:userId - Set monthly amount
+router.put('/monthly-amount/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { monthlyAmount } = req.body;
+    if (monthlyAmount === undefined) return res.status(400).json({ error: 'monthlyAmount is required' });
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { monthlyAmount: parseFloat(monthlyAmount) },
+      select: { id: true, shopName: true, monthlyAmount: true },
+    });
+    return res.json(updated);
+  } catch (err) {
+    console.error('Set monthly amount error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

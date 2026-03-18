@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
@@ -27,7 +27,10 @@ import {
   Phone,
   LifeBuoy,
   MessageSquare,
-  BadgeCheck
+  BadgeCheck,
+  Mail,
+  IndianRupee,
+  Pencil
 } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 
@@ -44,6 +47,10 @@ const AdminDashboard = () => {
   // Support tickets state
   const [tickets, setTickets] = useState([]);
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'support'
+
+  // Monthly amount edit state
+  const [editingAmountId, setEditingAmountId] = useState(null);
+  const [editingAmount, setEditingAmount] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -117,9 +124,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const saveMonthlyAmount = async (userId) => {
+    try {
+      await api.put(`/admin/monthly-amount/${userId}`, { monthlyAmount: editingAmount });
+      setEditingAmountId(null);
+      fetchUsers();
+    } catch (err) {
+      alert('Failed to update monthly amount');
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.shopName.toLowerCase().includes(search.toLowerCase()) || 
-    u.phone.includes(search)
+    u.phone.includes(search) ||
+    u.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -156,7 +174,7 @@ const AdminDashboard = () => {
            <CardContent className="pt-6">
              <div className="flex items-center justify-between">
                 <div>
-                   <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Active Support</p>
+                   <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Open Support</p>
                    <p className="text-3xl font-bold mt-1 text-red-600">
                      {tickets.filter(t => t.status === 'open').length}
                    </p>
@@ -201,7 +219,7 @@ const AdminDashboard = () => {
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input 
-                placeholder="Search shops or phone..." 
+                placeholder="Search by shop, phone, or email..." 
                 className="pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -284,57 +302,101 @@ const AdminDashboard = () => {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Shop Details</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Email</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Start Date</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Amount/Month</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Subscription</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Invoices</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Bills</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
-                    <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400">Loading shops...</td></tr>
+                    <tr><td colSpan="7" className="px-6 py-12 text-center text-slate-400">Loading shops...</td></tr>
                   ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400">No shops found matching your search.</td></tr>
+                    <tr><td colSpan="7" className="px-6 py-12 text-center text-slate-400">No shops found.</td></tr>
                   ) : filteredUsers.map((u) => {
                     const isExpired = new Date(u.subscriptionEnd) < new Date();
                     return (
                       <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                        {/* Shop Name + Phone */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                               <Store className="w-5 h-5 text-slate-400" />
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                               <Store className="w-4 h-4 text-slate-400" />
                             </div>
                             <div>
                               <p className="font-semibold text-slate-900 leading-tight">{u.shopName}</p>
-                              <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                                <span className="flex items-center gap-0.5"><Phone className="w-3 h-3"/> {u.phone}</span>
-                                <span className="text-slate-300">•</span>
-                                <span>{u.name}</span>
+                              <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                                <Phone className="w-3 h-3"/>
+                                <span>{u.phone}</span>
+                                <span className="text-slate-300 mx-1">•</span>
+                                <span className="text-slate-400">{u.name}</span>
                               </div>
                             </div>
                           </div>
                         </td>
+                        {/* Email */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                            <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate max-w-[150px]">{u.email}</span>
+                          </div>
+                        </td>
+                        {/* Start Date */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                            <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{u.subscriptionStart ? formatDate(u.subscriptionStart) : '—'}</span>
+                          </div>
+                        </td>
+                        {/* Monthly Amount */}
+                        <td className="px-6 py-4">
+                          {editingAmountId === u.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={editingAmount}
+                                onChange={(e) => setEditingAmount(e.target.value)}
+                                className="h-8 w-24 text-sm"
+                                placeholder="0"
+                                autoFocus
+                              />
+                              <Button size="sm" className="h-8 px-3 text-xs" onClick={() => saveMonthlyAmount(u.id)}>Save</Button>
+                              <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setEditingAmountId(null)}>✕</Button>
+                            </div>
+                          ) : (
+                            <div
+                              className="flex items-center gap-1.5 group cursor-pointer hover:text-brand-600 transition-colors"
+                              onClick={() => { setEditingAmountId(u.id); setEditingAmount(u.monthlyAmount || ''); }}
+                            >
+                              <IndianRupee className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500" />
+                              <span className="text-sm font-semibold text-slate-700">
+                                {u.monthlyAmount ? u.monthlyAmount.toLocaleString('en-IN') : <span className="text-slate-400 font-normal">Set</span>}
+                              </span>
+                              <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 text-brand-400 transition-opacity" />
+                            </div>
+                          )}
+                        </td>
+                        {/* Subscription */}
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full inline-block w-fit mb-1", isExpired ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600")}>
                                {isExpired ? 'Expired' : 'Active'}
                             </span>
                             <span className="text-sm text-slate-600 flex items-center gap-1">
-                              <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
                               {formatDate(u.subscriptionEnd)}
                             </span>
                           </div>
                         </td>
+                        {/* Invoice Count */}
                         <td className="px-6 py-4 text-center">
                           <Badge variant="secondary" className="font-mono text-sm leading-none py-1">
                             {u._count.invoices}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4">
-                           <Badge variant={u.isActive ? "success" : "warning"}>
-                             {u.isActive ? 'Live' : 'Inactive'}
-                           </Badge>
-                        </td>
+                        {/* Actions */}
                         <td className="px-6 py-4 text-right space-x-2">
                            <Button 
                              variant="outline" 
