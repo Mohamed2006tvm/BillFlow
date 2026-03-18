@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -43,6 +44,33 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/change-password
+router.put('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new passwords are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) return res.status(401).json({ error: 'Incorrect current password' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashed },
+    });
+
+    return res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

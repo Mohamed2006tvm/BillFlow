@@ -7,6 +7,7 @@ const authRoutes = require('./src/routes/auth');
 const adminRoutes = require('./src/routes/admin');
 const customerRoutes = require('./src/routes/customers');
 const invoiceRoutes = require('./src/routes/invoices');
+const supportRoutes = require('./src/routes/support');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,6 +53,7 @@ app.use('/api', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', invoiceRoutes);
+app.use('/api/support', supportRoutes);
 
 // Global error handler
 app.use((err, _req, res, _next) => {

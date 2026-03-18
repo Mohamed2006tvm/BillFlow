@@ -10,7 +10,8 @@ import {
   ArrowUpRight, 
   Plus,
   AlertTriangle,
-  Calendar
+  Calendar,
+  LifeBuoy
 } from 'lucide-react';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -118,17 +119,17 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-slate-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-               <div className="p-2 rounded-lg bg-slate-100 text-slate-600">
-                  <Calendar className="w-6 h-6" />
-               </div>
-               <Badge variant="outline" className="text-slate-500 border-slate-200">Expiry</Badge>
-            </div>
-            <p className="text-sm font-medium text-slate-500">Plan Ends On</p>
-            <p className="text-lg font-bold text-slate-700 mt-1">{formatDate(stats.subscriptionEnd)}</p>
-          </CardContent>
+        <Card className="bg-white border-brand-100">
+           <CardContent className="p-6">
+             <div className="flex items-center justify-between mb-4">
+                <div className="p-2 rounded-lg bg-orange-50 text-orange-600">
+                   <LifeBuoy className="w-6 h-6" />
+                </div>
+                <Badge variant="outline" className="text-orange-500 border-orange-200">Support</Badge>
+             </div>
+             <p className="text-sm font-medium text-slate-500">Active Queries</p>
+             <p className="text-3xl font-bold text-slate-900 mt-1">{stats.activeTickets || 0}</p>
+           </CardContent>
         </Card>
       </div>
 

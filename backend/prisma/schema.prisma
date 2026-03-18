@@ -21,6 +21,7 @@ model User {
   createdAt         DateTime   @default(now())
   customers         Customer[]
   invoices          Invoice[]
+  supportTickets    SupportTicket[]
 }
 
 model Customer {
@@ -51,4 +52,15 @@ model InvoiceItem {
   quantity  Int
   invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  subject   String
+  message   String
+  status    String   @default("open") // "open" | "closed"
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

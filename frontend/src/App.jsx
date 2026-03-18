@@ -12,6 +12,8 @@ import CustomersPage from './pages/CustomersPage';
 import CreateInvoicePage from './pages/CreateInvoicePage';
 import InvoiceListPage from './pages/InvoiceListPage';
 import InvoicePreviewPage from './pages/InvoicePreviewPage';
+import SupportPage from './pages/SupportPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Offline Detector Component
 const OfflineDetector = () => {
@@ -83,6 +85,14 @@ const AppRoutes = () => {
           <Route 
             path="/create-invoice" 
             element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} 
+          />
+          <Route 
+            path="/support" 
+            element={<ProtectedRoute><SupportPage /></ProtectedRoute>} 
+          />
+          <Route 
+            path="/settings" 
+            element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} 
           />
           <Route path="/invoice/:id" element={<InvoicePreviewPage />} />
         </Route>

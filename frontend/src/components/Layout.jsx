@@ -10,7 +10,8 @@ import {
   LogOut, 
   ShieldCheck,
   Menu,
-  X
+  X,
+  LifeBuoy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/Button';
@@ -27,10 +28,13 @@ const Layout = () => {
     { name: 'Customers', href: '/customers', icon: Users },
     { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Create Invoice', href: '/create-invoice', icon: PlusCircle },
+    { name: 'Support', href: '/support', icon: LifeBuoy },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   const adminNavigation = [
     { name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   const navigation = isAdmin ? adminNavigation : userNavigation;

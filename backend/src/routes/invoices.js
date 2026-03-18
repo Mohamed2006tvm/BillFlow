@@ -108,7 +108,7 @@ router.put('/invoice/:id/pay', authMiddleware, async (req, res) => {
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    const [totalInvoices, revenue, pending, invoices, user] = await Promise.all([
+    const [totalInvoices, revenue, pending, invoices, user, activeTickets] = await Promise.all([
       prisma.invoice.count({ where: { userId } }),
       prisma.invoice.aggregate({ _sum: { totalAmount: true }, where: { userId, status: 'paid' } }),
       prisma.invoice.aggregate({ _sum: { totalAmount: true }, where: { userId, status: 'pending' } }),
@@ -121,6 +121,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
         where: { id: userId },
         select: { subscriptionEnd: true, isActive: true },
       }),
+      prisma.supportTicket.count({ where: { userId, status: 'open' } }),
     ]);
 
     // Monthly revenue grouping
@@ -139,6 +140,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       monthly: Object.values(monthlyMap).sort((a, b) => a.month.localeCompare(b.month)),
       subscriptionEnd: user?.subscriptionEnd,
       isActive: user?.isActive,
+      activeTickets,
     });
   } catch (err) {
     console.error('Stats error:', err);
