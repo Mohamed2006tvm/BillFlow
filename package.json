@@ -13,7 +13,7 @@
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
     "build": "npm run build:backend && npm run build:frontend",
-    "start": "cd backend && npm start",
+    "start": "cd backend && np  m start",
     "start:desktop": "electron electron/main.js",
     "package:win": "npm run build:frontend && electron-builder --win",
     "package:linux": "npm run build:frontend && electron-builder --linux"
