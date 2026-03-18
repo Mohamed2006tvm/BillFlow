@@ -16,7 +16,7 @@ import {
 } from '../components/ui/Dialog';
 import { 
   Users, 
-  UserPlus, 
+  UserPlus,
   RefreshCw, 
   Power, 
   Search, 
@@ -40,11 +40,9 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // New user form state
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', phone: '', shopName: '' });
   const [creating, setCreating] = useState(false);
   
-  // Support tickets state
   const [tickets, setTickets] = useState([]);
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'support'
 
