@@ -1,0 +1,47 @@
+{
+  "name": "billflow",
+  "version": "1.0.0",
+  "description": "BillFlow – WhatsApp Billing SaaS",
+  "author": "BillFlow Team",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "db:migrate": "cd backend && npm run db:migrate",
+    "db:generate": "cd backend && npm run db:generate",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "start:desktop": "electron electron/main.js",
+    "package:win": "npm run build:frontend && electron-builder --win",
+    "package:linux": "npm run build:frontend && electron-builder --linux"
+  },
+  "build": {
+    "productName": "BillFlow",
+    "appId": "com.billflow.app",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "electron/icon.png"
+    }
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1"
+  }
+}
