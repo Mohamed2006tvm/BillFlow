@@ -14,16 +14,16 @@ model User {
   password          String
   phone             String          @unique
   shopName          String
-  role              String          @default("user") // "admin" | "user"
+  role              String          @default("user")
   isActive          Boolean         @default(true)
   subscriptionStart DateTime?
   subscriptionEnd   DateTime?
-  monthlyAmount     Float?          // Monthly fee charged by admin
   createdAt         DateTime        @default(now())
+  monthlyAmount     Float?
   customers         Customer[]
   invoices          Invoice[]
-  supportTickets    SupportTicket[]
   products          Product[]
+  supportTickets    SupportTicket[]
 }
 
 model Customer {
@@ -38,12 +38,12 @@ model Customer {
 model Invoice {
   id          String        @id @default(uuid())
   totalAmount Float         @default(0)
-  status      String        @default("pending") // "paid" | "pending"
+  status      String        @default("pending")
   userId      String
   customerId  String
   createdAt   DateTime      @default(now())
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer    Customer      @relation(fields: [customerId], references: [id])
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   items       InvoiceItem[]
 }
 
@@ -61,11 +61,11 @@ model SupportTicket {
   subject    String
   message    String
   adminReply String?
-  status     String   @default("open") // "open" | "closed"
+  status     String   @default("open")
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Product {
@@ -75,6 +75,6 @@ model Product {
   price     Float
   category  String?  @default("General")
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
