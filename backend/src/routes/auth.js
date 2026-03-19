@@ -35,6 +35,15 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // Include employees if it's a shop owner
+    let employees = [];
+    if (user.role === 'user') {
+      employees = await prisma.user.findMany({
+        where: { ownerId: user.id, role: 'employee' }, // Ensure only employees are fetched
+        select: { id: true, name: true, email: true, role: true }
+      });
+    }
+
     return res.json({
       token,
       user: {
@@ -47,6 +56,7 @@ router.post('/login', async (req, res) => {
         subscriptionEnd: user.subscriptionEnd,
         isActive: user.isActive,
       },
+      employees
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -189,5 +199,62 @@ router.delete('/employees/:id', authMiddleware, async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// POST /api/switch-profile - Get a scoped token for an employee or owner
+router.post('/switch-profile', authMiddleware, async (req, res) => {
+  try {
+    const { employeeId, password } = req.body;
+    
+    // If switching to Owner, requires password verification
+    if (!employeeId) {
+       const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+       if (!user || user.role !== 'user') return res.status(403).json({ error: 'Unauthorized' });
+
+       const isValid = await bcrypt.compare(password, user.password);
+       if (!isValid) return res.status(401).json({ error: 'Incorrect password' });
+
+       const token = jwt.sign(
+         { id: user.id, email: user.email, role: 'user', ownerId: user.id },
+         process.env.JWT_SECRET,
+         { expiresIn: '7d' }
+       );
+
+       return res.json({ token, user: { ...user, password: minified_user(user).password, role: 'user' } });
+    }
+
+    // Switching to Employee
+    const employee = await prisma.user.findFirst({
+      where: { id: employeeId, ownerId: req.user.ownerId }
+    });
+
+    if (!employee) return res.status(404).json({ error: 'Employee profile not found' });
+
+    const token = jwt.sign(
+      { id: employee.id, email: employee.email, role: 'employee', ownerId: employee.ownerId },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      token,
+      user: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        shopName: employee.shopName,
+        role: 'employee',
+        ownerId: employee.ownerId
+      }
+    });
+  } catch (err) {
+    console.error('Switch profile error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+function minified_user(user) {
+  const { password, ...rest } = user;
+  return rest;
+}
 
 module.exports = router;

@@ -18,11 +18,22 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/login', { email, password });
-    const { token, user: userData } = response.data;
+    return response.data; // { token, user }
+  };
+
+  const completeLogin = (token, userData) => {
     localStorage.setItem('billflow_token', token);
     localStorage.setItem('billflow_user', JSON.stringify(userData));
     setUser(userData);
-    return userData;
+  };
+
+  const switchProfile = async (token, employeeId, password) => {
+    // We use the provided token if we haven't set the global one yet
+    const response = await api.post('/switch-profile', 
+      { employeeId, password },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data; // { token, user }
   };
 
   const logout = () => {
@@ -34,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, completeLogin, switchProfile, isAdmin, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
