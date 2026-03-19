@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
-import { Search, UserPlus, Phone, User, Users, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Phone, User, Users, Loader2, Trash2 } from 'lucide-react';
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -43,6 +43,16 @@ const CustomersPage = () => {
       alert(err.response?.data?.error || 'Failed to add customer');
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (id, name) => {
+    if (!window.confirm(`Delete customer "${name}" and all their invoices?`)) return;
+    try {
+      await api.delete(`/customers/${id}`);
+      fetchCustomers();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete customer');
     }
   };
 
@@ -147,8 +157,16 @@ const CustomersPage = () => {
                          <Phone className="w-3.5 h-3.5" />
                          {c.phone}
                        </p>
-                    </div>
+                     </div>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 w-9 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleDeleteCustomer(c.id, c.name)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </CardContent>
               </Card>
             ))}

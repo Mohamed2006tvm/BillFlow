@@ -46,4 +46,23 @@ router.get('/customers', authMiddleware, async (req, res) => {
   }
 });
 
+// DELETE /api/customers/:id
+router.delete('/customers/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    if (customer.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await prisma.customer.delete({ where: { id } });
+    return res.json({ message: 'Customer deleted successfully' });
+  } catch (err) {
+    console.error('Delete customer error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

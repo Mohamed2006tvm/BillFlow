@@ -42,7 +42,7 @@ model Invoice {
   userId      String
   customerId  String
   createdAt   DateTime      @default(now())
-  customer    Customer      @relation(fields: [customerId], references: [id])
+  customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   items       InvoiceItem[]
 }

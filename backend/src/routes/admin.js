@@ -12,7 +12,7 @@ router.use(authMiddleware, isAdmin);
 // POST /api/admin/create-user
 router.post('/create-user', async (req, res) => {
   try {
-    const { name, email, password, phone, shopName } = req.body;
+    const { name, email, password, phone, shopName, subscriptionStart, monthlyAmount } = req.body;
     if (!name || !email || !password || !phone || !shopName) {
       return res.status(400).json({ error: 'All fields are required' });
     }
@@ -21,8 +21,8 @@ router.post('/create-user', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const now = new Date();
-    const subEnd = new Date(now);
+    const start = subscriptionStart ? new Date(subscriptionStart) : new Date();
+    const subEnd = new Date(start);
     subEnd.setDate(subEnd.getDate() + 30);
 
     const user = await prisma.user.create({
@@ -34,8 +34,9 @@ router.post('/create-user', async (req, res) => {
         shopName,
         role: 'user',
         isActive: true,
-        subscriptionStart: now,
+        subscriptionStart: start,
         subscriptionEnd: subEnd,
+        monthlyAmount: monthlyAmount ? parseFloat(monthlyAmount) : 0,
       },
     });
 
@@ -88,10 +89,8 @@ router.put('/renew/:userId', async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Extend from current expiry (or now if already expired)
-    const base = user.subscriptionEnd && new Date(user.subscriptionEnd) > new Date()
-      ? new Date(user.subscriptionEnd)
-      : new Date();
+    // Extend from today
+    const base = new Date();
     base.setDate(base.getDate() + 30);
 
     const updated = await prisma.user.update({
@@ -139,6 +138,26 @@ router.put('/monthly-amount/:userId', async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error('Set monthly amount error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/user/:userId - Delete shop account (Admin)
+router.delete('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Check if user exists
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Prevent deleting other admins (optional, but safe)
+    if (user.role === 'admin') return res.status(403).json({ error: 'Cannot delete admin accounts' });
+
+    await prisma.user.delete({ where: { id: userId } });
+    return res.json({ message: 'User and all associated data deleted successfully' });
+  } catch (err) {
+    console.error('Delete user error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
