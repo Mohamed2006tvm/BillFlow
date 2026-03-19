@@ -14,17 +14,27 @@ model User {
   password          String
   phone             String          @unique
   shopName          String
-  role              String          @default("user")
+  role              String          @default("user") // "admin", "user" (owner), "employee"
   isActive          Boolean         @default(true)
   isArchived        Boolean         @default(false)
   subscriptionStart DateTime?
   subscriptionEnd   DateTime?
   createdAt         DateTime        @default(now())
   monthlyAmount     Float?
+  
+  // Relations for data ownership
   customers         Customer[]
-  invoices          Invoice[]
+  invoices          Invoice[]       @relation("ShopInvoices")
   products          Product[]
   supportTickets    SupportTicket[]
+
+  // New: Relations for Employee/Owner hierarchy
+  ownerId           String?
+  owner             User?           @relation("ShopEmployees", fields: [ownerId], references: [id])
+  employees         User[]          @relation("ShopEmployees")
+
+  // New: Relation for tracking who created the invoice
+  createdInvoices   Invoice[]       @relation("InvoiceCreator")
 }
 
 model Customer {
@@ -41,12 +51,16 @@ model Invoice {
   id          String        @id @default(uuid())
   totalAmount Float         @default(0)
   status      String        @default("pending")
-  userId      String
+  userId      String        // The Shop (Owner) this invoice belongs to
   customerId  String
   createdAt   DateTime      @default(now())
   customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User          @relation("ShopInvoices", fields: [userId], references: [id], onDelete: Cascade)
   items       InvoiceItem[]
+
+  // New: Track who specifically generated this
+  createdById String?
+  creator     User?         @relation("InvoiceCreator", fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 model InvoiceItem {

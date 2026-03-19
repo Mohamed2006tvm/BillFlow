@@ -28,12 +28,12 @@ const Layout = () => {
   const userNavigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Customers', href: '/customers', icon: Users },
-    { name: 'Customer History', href: '/customers/history', icon: History },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Create Invoice', href: '/create-invoice', icon: PlusCircle },
-    { name: 'Support', href: '/support', icon: LifeBuoy },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Support', href: '/support', icon: LifeBuoy, ownerOnly: true },
+    { name: 'Settings', href: '/settings', icon: Settings, ownerOnly: true },
+    { name: 'Employees', href: '/employees', icon: Users, ownerOnly: true },
   ];
 
   const adminNavigation = [
@@ -42,7 +42,15 @@ const Layout = () => {
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  const navigation = isAdmin ? adminNavigation : userNavigation;
+  let navigation = isAdmin ? adminNavigation : userNavigation;
+
+  // Filter for employees
+  if (user?.role === 'employee') {
+    navigation = userNavigation.filter(item => !item.ownerOnly);
+  } else if (user?.role === 'user') {
+    // Owners see all but might want to exclude history if requested (already removed for userNavigation in previous task, but let's keep it consistent)
+    navigation = userNavigation;
+  }
 
   const handleLogout = () => {
     logout();

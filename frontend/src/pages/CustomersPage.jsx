@@ -117,11 +117,6 @@ const CustomersPage = () => {
               <h2 className="text-2xl font-bold tracking-tight">Customer Database</h2>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-slate-500">Manage all your shop's users here.</p>
-                <span className="text-slate-300">•</span>
-                <Link to="/customers/history" className="text-brand-600 hover:underline text-sm font-medium flex items-center gap-1">
-                  <History className="w-3.5 h-3.5" />
-                  View History
-                </Link>
               </div>
            </div>
            <div className="relative w-full sm:w-64">

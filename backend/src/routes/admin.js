@@ -145,6 +145,48 @@ router.put('/monthly-amount/:userId', async (req, res) => {
   }
 });
 
+// GET /api/admin/archive - Get archived shops (Admin)
+router.get('/archive', async (_req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: 'user', isArchived: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        shopName: true,
+        isActive: true,
+        subscriptionEnd: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.json(users);
+  } catch (err) {
+    console.error('List archived users error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/restore/:userId - Restore archived shop (Admin)
+router.put('/restore/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isArchived: false }
+    });
+    return res.json({ message: 'User restored successfully' });
+  } catch (err) {
+    console.error('Restore user error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/admin/user/:userId - Archive shop account (Admin)
 router.delete('/user/:userId', async (req, res) => {
   try {

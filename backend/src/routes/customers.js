@@ -12,7 +12,7 @@ router.post('/customers', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'name and phone are required' });
     }
     const customer = await prisma.customer.create({
-      data: { name, phone, userId: req.user.id },
+      data: { name, phone, userId: req.user.ownerId },
     });
     return res.status(201).json(customer);
   } catch (err) {
@@ -27,7 +27,7 @@ router.get('/customers', authMiddleware, async (req, res) => {
     const { search } = req.query;
     const customers = await prisma.customer.findMany({
       where: {
-        userId: req.user.id,
+        userId: req.user.ownerId,
         isArchived: false,
         ...(search
           ? {
@@ -51,7 +51,7 @@ router.get('/customers', authMiddleware, async (req, res) => {
 router.get('/customers/archive', authMiddleware, async (req, res) => {
   try {
     const customers = await prisma.customer.findMany({
-      where: { userId: req.user.id, isArchived: true },
+      where: { userId: req.user.ownerId, isArchived: true },
       orderBy: { name: 'asc' },
     });
     return res.json(customers);
@@ -68,7 +68,7 @@ router.delete('/customers/:id', authMiddleware, async (req, res) => {
     const customer = await prisma.customer.findUnique({ where: { id } });
     
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
-    if (customer.userId !== req.user.id) {
+    if (customer.userId !== req.user.ownerId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -90,7 +90,7 @@ router.put('/customers/:id/restore', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const customer = await prisma.customer.findUnique({ where: { id } });
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
-    if (customer.userId !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+    if (customer.userId !== req.user.ownerId) return res.status(403).json({ error: 'Unauthorized' });
  
     await prisma.customer.update({
       where: { id },

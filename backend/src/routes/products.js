@@ -9,7 +9,7 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const products = await prisma.product.findMany({
-      where: { userId: req.user.id },
+      where: { userId: req.user.ownerId },
       orderBy: { name: 'asc' },
     });
     return res.json(products);
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Name and price are required' });
     }
     const product = await prisma.product.create({
-      data: { name, sku: sku || null, price: parseFloat(price), userId: req.user.id },
+      data: { name, sku: sku || null, price: parseFloat(price), userId: req.user.ownerId },
     });
     return res.status(201).json(product);
   } catch (err) {
@@ -41,7 +41,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, sku, price } = req.body;
-    const existing = await prisma.product.findFirst({ where: { id, userId: req.user.id } });
+    const existing = await prisma.product.findFirst({ where: { id, userId: req.user.ownerId } });
     if (!existing) return res.status(404).json({ error: 'Product not found' });
 
     const product = await prisma.product.update({
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.product.findFirst({ where: { id, userId: req.user.id } });
+    const existing = await prisma.product.findFirst({ where: { id, userId: req.user.ownerId } });
     if (!existing) return res.status(404).json({ error: 'Product not found' });
 
     await prisma.product.delete({ where: { id } });

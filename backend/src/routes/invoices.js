@@ -20,10 +20,11 @@ router.post('/invoice', authMiddleware, subscriptionCheck, async (req, res) => {
 
     const invoice = await prisma.invoice.create({
       data: {
-        userId: req.user.id,
+        userId: req.user.ownerId,
         customerId,
         totalAmount,
         status: 'pending',
+        createdById: req.user.id,
         items: {
           create: items.map((item) => ({
             name: item.name,
@@ -32,7 +33,7 @@ router.post('/invoice', authMiddleware, subscriptionCheck, async (req, res) => {
           })),
         },
       },
-      include: { items: true, customer: true },
+      include: { items: true, customer: true, creator: { select: { name: true } } },
     });
 
     return res.status(201).json(invoice);
@@ -46,7 +47,7 @@ router.post('/invoice', authMiddleware, subscriptionCheck, async (req, res) => {
 router.get('/invoices', authMiddleware, async (req, res) => {
   try {
     const { status, search } = req.query;
-    const where = { userId: req.user.id };
+    const where = { userId: req.user.ownerId };
 
     if (status === 'paid' || status === 'pending') where.status = status;
     if (search) {
@@ -58,6 +59,7 @@ router.get('/invoices', authMiddleware, async (req, res) => {
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         items: true,
+        creator: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -107,7 +109,7 @@ router.put('/invoice/:id/pay', authMiddleware, async (req, res) => {
 // GET /api/stats  — user dashboard stats
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.ownerId;
     const [totalInvoices, revenue, pending, invoices, user, activeTickets] = await Promise.all([
       prisma.invoice.count({ where: { userId } }),
       prisma.invoice.aggregate({ _sum: { totalAmount: true }, where: { userId, status: 'paid' } }),
