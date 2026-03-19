@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   BarChart, 
   Bar, 
@@ -29,6 +30,8 @@ import {
 const UserDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user: currentUser } = useAuth();
+  const isEmployee = currentUser?.role === 'employee';
 
   useEffect(() => {
     fetchStats();
@@ -119,18 +122,20 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-brand-100">
-           <CardContent className="p-6">
-             <div className="flex items-center justify-between mb-4">
-                <div className="p-2 rounded-lg bg-orange-50 text-orange-600">
-                   <LifeBuoy className="w-6 h-6" />
-                </div>
-                <Badge variant="outline" className="text-orange-500 border-orange-200">Support</Badge>
-             </div>
-             <p className="text-sm font-medium text-slate-500">Active Queries</p>
-             <p className="text-3xl font-bold text-slate-900 mt-1">{stats.activeTickets || 0}</p>
-           </CardContent>
-        </Card>
+        {!isEmployee && (
+          <Card className="bg-white border-brand-100">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between mb-4">
+                  <div className="p-2 rounded-lg bg-orange-50 text-orange-600">
+                     <LifeBuoy className="w-6 h-6" />
+                  </div>
+                  <Badge variant="outline" className="text-orange-500 border-orange-200">Support</Badge>
+               </div>
+               <p className="text-sm font-medium text-slate-500">Active Queries</p>
+               <p className="text-3xl font-bold text-slate-900 mt-1">{stats.activeTickets || 0}</p>
+             </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -192,23 +197,25 @@ const UserDashboard = () => {
               </CardContent>
            </Card>
 
-           <Card>
-              <CardHeader>
-                 <CardTitle className="text-base">Recent Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-500">Account Status</span>
-                    <Badge variant={stats.isActive ? "success" : "destructive"}>
-                       {stats.isActive ? 'Active' : 'Deactivated'}
-                    </Badge>
-                 </div>
-                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-500">Payment Health</span>
-                    <span className="text-sm font-semibold text-emerald-600">Healthy</span>
-                 </div>
-              </CardContent>
-           </Card>
+           {!isEmployee && (
+             <Card>
+                <CardHeader>
+                   <CardTitle className="text-base">Recent Status</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Account Status</span>
+                      <Badge variant={stats.isActive ? "success" : "destructive"}>
+                         {stats.isActive ? 'Active' : 'Deactivated'}
+                      </Badge>
+                   </div>
+                   <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Payment Health</span>
+                      <span className="text-sm font-semibold text-emerald-600">Healthy</span>
+                   </div>
+                </CardContent>
+             </Card>
+           )}
         </div>
       </div>
     </div>
