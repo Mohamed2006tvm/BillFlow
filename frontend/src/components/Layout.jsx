@@ -132,7 +132,7 @@ const Layout = () => {
                   Admin Panel
                 </Badge>
               )}
-              {!isAdmin && user?.subscriptionEnd && (
+              {user?.role === 'user' && user?.subscriptionEnd && (
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[10px] text-slate-500 uppercase font-bold">Subscription End</span>
                   <span className="text-xs font-semibold">

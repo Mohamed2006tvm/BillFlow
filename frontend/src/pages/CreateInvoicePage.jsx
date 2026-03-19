@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -23,6 +24,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 
 const CreateInvoicePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [customerId, setCustomerId] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
@@ -382,7 +384,9 @@ const CreateInvoicePage = () => {
              </div>
           </div>
 
-          {error && <p className="text-[10px] font-bold text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20">{error}</p>}
+          {error && !(user?.role === 'employee' && error.toLowerCase().includes('subscription')) && (
+             <p className="text-[10px] font-bold text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20">{error}</p>
+          )}
 
           <div className="grid grid-cols-5 gap-2">
              <button 
