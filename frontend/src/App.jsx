@@ -69,7 +69,7 @@ const AppRoutes = () => {
             path="/" 
             element={
               <ProtectedRoute>
-                <UserDashboard />
+                {user?.role === 'employee' ? <Navigate to="/customers" replace /> : <UserDashboard />}
               </ProtectedRoute>
             } 
           />
