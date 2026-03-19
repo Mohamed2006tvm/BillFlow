@@ -42,13 +42,12 @@ const Layout = () => {
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  let navigation = isAdmin ? adminNavigation : userNavigation;
-
-  // Filter for employees
+  let navigation;
   if (user?.role === 'employee') {
-    navigation = userNavigation.filter(item => !item.ownerOnly && item.name !== 'Dashboard');
-  } else if (user?.role === 'user') {
-    // Owners see all but might want to exclude history if requested (already removed for userNavigation in previous task, but let's keep it consistent)
+    navigation = userNavigation.filter(item => !item.ownerOnly && item.href !== '/' && item.name !== 'Dashboard');
+  } else if (isAdmin) {
+    navigation = adminNavigation;
+  } else {
     navigation = userNavigation;
   }
 

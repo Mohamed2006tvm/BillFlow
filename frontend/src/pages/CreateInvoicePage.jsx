@@ -384,7 +384,7 @@ const CreateInvoicePage = () => {
              </div>
           </div>
 
-          {error && !(user?.role === 'employee' && error.toLowerCase().includes('subscription')) && (
+          {error && !(user?.role !== 'user' && error.toLowerCase().includes('subscription')) && (
              <p className="text-[10px] font-bold text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20">{error}</p>
           )}
 
