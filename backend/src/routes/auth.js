@@ -67,10 +67,48 @@ router.put('/change-password', authMiddleware, async (req, res) => {
       where: { id: req.user.id },
       data: { password: hashed },
     });
-
     return res.json({ message: 'Password updated successfully' });
   } catch (err) {
     console.error('Change password error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/reset-password - Reset admin password to "1234"
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Security check: Only allow reset if user is an admin
+    if (user.role !== 'admin') {
+      // Create a support ticket for the user
+      await prisma.supportTicket.create({
+        data: {
+          subject: 'Password Reset Request',
+          message: `User ${user.name} (${user.email}) is requesting a password reset to default 1234.`,
+          userId: user.id
+        }
+      });
+      return res.json({ message: 'Your reset request has been sent to the administrator. Please check back later.' });
+    }
+
+    const hashed = await bcrypt.hash('1234', 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed },
+    });
+
+    return res.json({ message: 'Password has been reset to default: 1234' });
+  } catch (err) {
+    console.error('Reset password error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

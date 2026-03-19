@@ -57,14 +57,15 @@ model InvoiceItem {
 }
 
 model SupportTicket {
-  id        String   @id @default(uuid())
-  subject   String
-  message   String
-  status    String   @default("open") // "open" | "closed"
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  subject    String
+  message    String
+  adminReply String?
+  status     String   @default("open") // "open" | "closed"
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Product {
@@ -72,6 +73,7 @@ model Product {
   name      String
   sku       String?
   price     Float
+  category  String?  @default("General")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

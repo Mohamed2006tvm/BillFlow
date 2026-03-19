@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
@@ -70,24 +71,61 @@ router.get('/admin/all', async (_req, res) => {
   }
 });
 
-// PUT /api/support/admin/:id - Update ticket status (Admin)
-router.put('/admin/:id', async (req, res) => {
+// PUT /api/support/admin/:id/reply - Reply to a ticket (Admin)
+router.put('/admin/:id/reply', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { adminReply, status } = req.body;
 
-    if (!['open', 'closed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    if (!adminReply) {
+      return res.status(400).json({ error: 'Reply message is required' });
     }
 
     const ticket = await prisma.supportTicket.update({
       where: { id },
-      data: { status },
+      data: { 
+        adminReply,
+        status: status || 'closed' // Default to closing if not specified
+      },
     });
 
     return res.json(ticket);
   } catch (err) {
-    console.error('Update ticket error:', err);
+    console.error('Reply to ticket error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/support/admin/:id/reset-password - Reset the user's password (Admin)
+router.put('/admin/:id/reset-password', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id },
+      include: { user: true }
+    });
+
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+    const hashed = await bcrypt.hash('1234', 10);
+    
+    await prisma.user.update({
+      where: { id: ticket.userId },
+      data: { password: hashed }
+    });
+
+    // Update ticket status and add reply
+    const updatedTicket = await prisma.supportTicket.update({
+      where: { id },
+      data: { 
+        adminReply: 'Your password has been reset to the default: 1234. Please log in and change it in Settings.',
+        status: 'closed'
+      },
+    });
+
+    return res.json({ message: 'User password reset to 1234 successfully', ticket: updatedTicket });
+  } catch (err) {
+    console.error('Admin user password reset error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
