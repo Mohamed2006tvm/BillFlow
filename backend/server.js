@@ -16,7 +16,8 @@ const PORT = process.env.PORT || 5000;
 // Security Middleware
 app.use(helmet());
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URL?.split(',') || []),
+  'https://bill-flow-sable.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
