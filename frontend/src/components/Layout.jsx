@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LifeBuoy,
-  Package
+  Package,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/Button';
@@ -27,6 +28,7 @@ const Layout = () => {
   const userNavigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Customers', href: '/customers', icon: Users },
+    { name: 'Customer History', href: '/customers/history', icon: History },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Create Invoice', href: '/create-invoice', icon: PlusCircle },
@@ -36,6 +38,7 @@ const Layout = () => {
 
   const adminNavigation = [
     { name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck },
+    { name: 'Customer History', href: '/customers/history', icon: History },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 

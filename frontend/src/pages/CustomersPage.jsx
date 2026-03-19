@@ -4,7 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
-import { Search, UserPlus, Phone, User, Users, Loader2, Trash2 } from 'lucide-react';
+import { Search, UserPlus, Phone, User, Users, Loader2, Archive, History } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -46,13 +47,13 @@ const CustomersPage = () => {
     }
   };
 
-  const handleDeleteCustomer = async (id, name) => {
-    if (!window.confirm(`Delete customer "${name}" and all their invoices?`)) return;
+  const handleArchiveCustomer = async (id, name) => {
+    if (!window.confirm(`Archive customer "${name}"? They will be moved to History.`)) return;
     try {
       await api.delete(`/customers/${id}`);
       fetchCustomers();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete customer');
+      alert(err.response?.data?.error || 'Failed to archive customer');
     }
   };
 
@@ -114,7 +115,14 @@ const CustomersPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
            <div>
               <h2 className="text-2xl font-bold tracking-tight">Customer Database</h2>
-              <p className="text-slate-500">Manage all your shop's users here.</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-slate-500">Manage all your shop's users here.</p>
+                <span className="text-slate-300">•</span>
+                <Link to="/customers/history" className="text-brand-600 hover:underline text-sm font-medium flex items-center gap-1">
+                  <History className="w-3.5 h-3.5" />
+                  View History
+                </Link>
+              </div>
            </div>
            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -162,10 +170,10 @@ const CustomersPage = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-9 w-9 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDeleteCustomer(c.id, c.name)}
+                    className="h-9 w-9 p-0 text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-opacity"
+                    onClick={() => handleArchiveCustomer(c.id, c.name)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Archive className="w-4 h-4" />
                   </Button>
                 </CardContent>
               </Card>

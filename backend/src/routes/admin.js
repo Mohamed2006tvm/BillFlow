@@ -59,7 +59,10 @@ router.post('/create-user', async (req, res) => {
 router.get('/users', async (_req, res) => {
   try {
     const users = await prisma.user.findMany({
-      where: { role: 'user' },
+      where: {
+        role: 'user',
+        isArchived: false,
+      },
       select: {
         id: true,
         name: true,
@@ -142,7 +145,7 @@ router.put('/monthly-amount/:userId', async (req, res) => {
   }
 });
 
-// DELETE /api/admin/user/:userId - Delete shop account (Admin)
+// DELETE /api/admin/user/:userId - Archive shop account (Admin)
 router.delete('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -151,13 +154,17 @@ router.delete('/user/:userId', async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
     
-    // Prevent deleting other admins (optional, but safe)
-    if (user.role === 'admin') return res.status(403).json({ error: 'Cannot delete admin accounts' });
+    // Prevent deleting other admins
+    if (user.role === 'admin') return res.status(403).json({ error: 'Cannot archive admin accounts' });
 
-    await prisma.user.delete({ where: { id: userId } });
-    return res.json({ message: 'User and all associated data deleted successfully' });
+    // Set isArchived to true instead of deleting
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isArchived: true }
+    });
+    return res.json({ message: 'User archived successfully' });
   } catch (err) {
-    console.error('Delete user error:', err);
+    console.error('Archive user error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

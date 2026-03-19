@@ -28,6 +28,7 @@ router.get('/customers', authMiddleware, async (req, res) => {
     const customers = await prisma.customer.findMany({
       where: {
         userId: req.user.id,
+        isArchived: false,
         ...(search
           ? {
               OR: [
@@ -46,7 +47,21 @@ router.get('/customers', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/customers/:id
+// GET /api/customers/archive (History)
+router.get('/customers/archive', authMiddleware, async (req, res) => {
+  try {
+    const customers = await prisma.customer.findMany({
+      where: { userId: req.user.id, isArchived: true },
+      orderBy: { name: 'asc' },
+    });
+    return res.json(customers);
+  } catch (err) {
+    console.error('List history error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// "Delete" customer (Soft Delete)
 router.delete('/customers/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -57,10 +72,33 @@ router.delete('/customers/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    await prisma.customer.delete({ where: { id } });
-    return res.json({ message: 'Customer deleted successfully' });
+    // Set isArchived to true instead of deleting
+    await prisma.customer.update({ 
+      where: { id },
+      data: { isArchived: true }
+    });
+    return res.json({ message: 'Customer moved to history' });
   } catch (err) {
-    console.error('Delete customer error:', err);
+    console.error('Archive customer error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Restore customer
+router.put('/customers/:id/restore', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    if (customer.userId !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+ 
+    await prisma.customer.update({
+      where: { id },
+      data: { isArchived: false }
+    });
+    return res.json({ message: 'Customer restored successfully' });
+  } catch (err) {
+    console.error('Restore customer error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
