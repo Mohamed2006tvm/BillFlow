@@ -43,7 +43,7 @@ const AuthPage = () => {
     setResetMessage('');
     setResetLoading(true);
     try {
-      const res = await api.post('/auth/reset-password', { email: resetEmail });
+      const res = await api.post('/reset-password', { email: resetEmail });
       setResetMessage(res.data.message);
     } catch (err) {
       setResetError(err.response?.data?.error || 'Failed to reset password');
