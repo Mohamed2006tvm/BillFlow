@@ -3,10 +3,11 @@ const prisma = require('../lib/prisma');
 const subscriptionCheck = async (req, res, next) => {
   try {
     // Admins bypass subscription check
-    if (req.user?.role === 'admin') return next();
+    const userId = req.user.role === 'admin' ? null : req.user.ownerId;
+    if (req.user.role === 'admin') return next();
 
     const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: userId },
       select: { isActive: true, subscriptionEnd: true },
     });
 
