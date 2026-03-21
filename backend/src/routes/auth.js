@@ -129,13 +129,13 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// GET /api/employees - Get all employees for this shop (Owner only)
+// GET /api/employees - Get all employees for this shop
 router.get('/employees', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'user') return res.status(403).json({ error: 'Only shop owners can manage employees' });
+    const ownerId = req.user.role === 'user' ? req.user.id : req.user.ownerId;
     
     const employees = await prisma.user.findMany({
-      where: { ownerId: req.user.id, role: 'employee' },
+      where: { ownerId: ownerId, role: 'employee' },
       select: { id: true, name: true, email: true, phone: true, createdAt: true }
     });
     return res.json(employees);
@@ -205,21 +205,21 @@ router.post('/switch-profile', authMiddleware, async (req, res) => {
   try {
     const { employeeId, password } = req.body;
     
-    // If switching to Owner, requires password verification
+    // If switching to Owner, requires password verification of the master account
     if (!employeeId) {
-       const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-       if (!user || user.role !== 'user') return res.status(403).json({ error: 'Unauthorized' });
+       const owner = await prisma.user.findUnique({ where: { id: req.user.ownerId } });
+       if (!owner) return res.status(404).json({ error: 'Owner not found' });
 
-       const isValid = await bcrypt.compare(password, user.password);
+       const isValid = await bcrypt.compare(password, owner.password);
        if (!isValid) return res.status(401).json({ error: 'Incorrect password' });
 
        const token = jwt.sign(
-         { id: user.id, email: user.email, role: 'user', ownerId: user.id },
+         { id: owner.id, email: owner.email, role: 'user', ownerId: owner.id },
          process.env.JWT_SECRET,
          { expiresIn: '7d' }
        );
 
-       return res.json({ token, user: { ...user, password: minified_user(user).password, role: 'user' } });
+       return res.json({ token, user: { ...owner, password: undefined, role: 'user' } });
     }
 
     // Switching to Employee

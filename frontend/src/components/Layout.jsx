@@ -20,7 +20,7 @@ import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 
 const Layout = () => {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout, logoutToProfiles } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -53,6 +53,11 @@ const Layout = () => {
 
   const handleLogout = () => {
     logout();
+    navigate('/login');
+  };
+
+  const handleChangeEmployee = () => {
+    logoutToProfiles();
     navigate('/login');
   };
 
@@ -96,6 +101,16 @@ const Layout = () => {
               <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
               <p className="text-xs text-slate-400 truncate">{user?.shopName || 'Administrator'}</p>
             </div>
+            {(user?.role === 'employee' || user?.role === 'user') && (
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 text-sidebar-text hover:text-white mb-2"
+                onClick={handleChangeEmployee}
+              >
+                <Users className="w-5 h-5" />
+                Change Employee
+              </Button>
+            )}
             <Button 
               variant="ghost" 
               className="w-full justify-start gap-3 text-sidebar-text hover:text-white hover:bg-red-500/10 hover:text-red-400"
@@ -180,6 +195,12 @@ const Layout = () => {
                 ))}
              </nav>
              <div className="p-4 border-t border-white/10">
+                {(user?.role === 'employee' || user?.role === 'user') && (
+                  <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-text hover:text-white mb-2" onClick={handleChangeEmployee}>
+                    <Users className="w-5 h-5" />
+                    Change Employee
+                  </Button>
+                )}
                 <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-text hover:text-white" onClick={handleLogout}>
                   <LogOut className="w-5 h-5" />
                   Sign Out

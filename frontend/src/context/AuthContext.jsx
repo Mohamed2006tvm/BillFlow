@@ -42,10 +42,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const logoutToProfiles = () => {
+    localStorage.removeItem('billflow_user');
+    setUser(null);
+  };
+
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, completeLogin, switchProfile, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, logoutToProfiles, completeLogin, switchProfile, isAdmin, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

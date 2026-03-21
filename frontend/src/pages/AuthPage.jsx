@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
@@ -18,6 +18,32 @@ const AuthPage = () => {
   const [tempToken, setTempToken] = useState(null);
   const [shopUser, setShopUser] = useState(null);
   const [employees, setEmployees] = useState([]);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('billflow_token');
+    const existingUser = localStorage.getItem('billflow_user');
+    
+    // If we have a token but no selected user, try to load profiles
+    if (token && !existingUser && step === 'login') {
+      const loadProfiles = async () => {
+        setLoading(true);
+        try {
+          const res = await api.get('/employees', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setEmployees(res.data);
+          setTempToken(token);
+          setStep('profiles');
+        } catch (err) {
+          console.error("Failed to load profiles:", err);
+          localStorage.removeItem('billflow_token');
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadProfiles();
+    }
+  }, [step]);
   
   const { login, completeLogin, switchProfile } = useAuth();
 
